@@ -84,8 +84,8 @@ fn real_addr(request: &Request) -> String {
 
 #[derive(Deserialize)]
 struct ConnectionHistoryArgs {
-    start: Option<u32>,
-    end: Option<u32>
+    start: u32,
+    end: u32
 }
 
 #[derive(Debug, Deserialize)]
@@ -98,10 +98,6 @@ struct Connection {
 
 #[derive(Debug, thiserror::Error)]
 pub enum ConnectionHistoryError {
-    #[error("Missing start")]
-    EndWithoutStart,
-    #[error("Missing end")]
-    StartWithoutEnd,
     #[error("Start not less than end")]
     StartNotLessThanEnd,
     #[error("{0}")]
@@ -122,27 +118,6 @@ impl IntoResponse for ConnectionHistoryError {
 }
 
 async fn get_connections<'e, E>(
-    ex: E
-) -> Result<Vec<Connection>, sqlx::Error>
-where
-    E: Executor<'e, Database = Sqlite>
-{
-    sqlx::query_as!(
-        Connection,
-        "
-SELECT
-    module_name,
-    game_room,
-    player_name,
-    time
-FROM connections
-        " 
-    )
-    .fetch_all(ex)
-    .await
-}
-
-async fn get_connections_between<'e, E>(
     ex: E,
     start: i64,
     end: i64
@@ -173,24 +148,15 @@ async fn get_connection_history(
     State(state): State<Arc<AppState>>
 ) -> Result<String, ConnectionHistoryError> {
 
-    let conns = if let Some(end) = query.end {
-        if let Some(start) = query.start {
-            if end <= start {
-                return Err(ConnectionHistoryError::StartNotLessThanEnd);
-            }
+    if query.end <= query.start {
+        return Err(ConnectionHistoryError::StartNotLessThanEnd);
+    }
 
-            get_connections_between(&state.db, start as i64, end as i64).await?
-        }
-        else {
-            return Err(ConnectionHistoryError::EndWithoutStart);
-        }
-    }
-    else if query.start.is_some() {
-        return Err(ConnectionHistoryError::StartWithoutEnd);
-    }
-    else { 
-        get_connections(&state.db).await?
-    };
+    let conns = get_connections(
+        &state.db,
+        query.start as i64,
+        query.end as i64
+    ).await?;
 
     // FIXME: this doesn't properly escape tabs
     // FIXME: should stream instead of constructing huge response?
@@ -247,7 +213,7 @@ SELECT
     game_room,
     player_name
 FROM connections
-WHERE unixepoch() * 1000 - time <= ? 
+WHERE unixepoch() * 1000 - time <= ?
 ORDER BY module_name, game_room, player_name
                 ",
                 when.as_millis() as i64
@@ -305,7 +271,7 @@ async fn get_current_connections(
 
 #[derive(Deserialize)]
 struct GetMessagesArgs {
-    module: String 
+    module: String
 }
 
 #[derive(Debug, Deserialize)]
@@ -323,13 +289,13 @@ where
     E: Executor<'e, Database = Sqlite>
 {
     sqlx::query_as!(
-        Message, 
+        Message,
         "
 SELECT
     sender,
     time,
     content
-FROM messages 
+FROM messages
 WHERE module_name = ?
         ",
         module
@@ -355,8 +321,8 @@ async fn get_messages(
     Query(query): Query<GetMessagesArgs>,
     State(state): State<Arc<AppState>>
 ) -> Result<String, GetMessagesError> {
-    
-    Ok( 
+
+    Ok(
         get_messages_for(&state.db, &query.module)
             .await?
             .into_iter()
@@ -531,7 +497,7 @@ where
     sqlx::query!(
         "
 INSERT INTO connections (
-    time, 
+    time,
     game_room,
     module_name,
     player_name
