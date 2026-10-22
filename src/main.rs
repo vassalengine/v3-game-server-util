@@ -1,6 +1,5 @@
 #![feature(duration_constructors)]
 
-use askama::Template;
 use axum::{
     Router,
     body::Body,
@@ -11,7 +10,7 @@ use axum::{
             MultipartError, MultipartRejection
         }
     },
-    response::{Html, IntoResponse, Response},
+    response::{IntoResponse, Response},
     routing::{get, post}
 };
 use chrono::Utc;
@@ -40,7 +39,6 @@ use tracing::{error, info, Level};
 
 #[derive(Clone)]
 pub struct AppState {
-    base_path: String,
     game_server_ip: String,
     motd_path: String,
     db: Pool<Sqlite>
@@ -96,7 +94,7 @@ struct Connection {
     module_name: String,
     game_room: String,
     player_name: String,
-    timestamp: i64
+    time: i64
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -130,7 +128,6 @@ async fn get_connections<'e, E>(
 where
     E: Executor<'e, Database = Sqlite>
 {
-//    (unixepoch(time) * 1000) AS timestamp
     sqlx::query_as!(
         Connection,
         "
@@ -138,7 +135,7 @@ SELECT
     module_name,
     game_room,
     player_name,
-    0 AS timestamp
+    time
 FROM connections
         " 
     )
@@ -161,9 +158,9 @@ SELECT
     module_name,
     game_room,
     player_name,
-    0 AS timestamp
+    time
 FROM connections
-WHERE time BETWEEN datetime(?) AND datetime(?)
+WHERE time BETWEEN ? AND ?
         ",
         start,
         end + 1
@@ -206,7 +203,7 @@ async fn get_connection_history(
                 c.module_name,
                 c.game_room,
                 c.player_name,
-                c.timestamp
+                c.time
             ))
             .collect::<Vec<_>>()
             .join("\n")
@@ -222,23 +219,43 @@ struct CurrentConnection {
 
 async fn get_connections_current<'e, E>(
     ex: E,
+    when: Duration
 ) -> Result<Vec<CurrentConnection>, sqlx::Error>
 where
     E: Executor<'e, Database = Sqlite>
 {
-    sqlx::query_as!(
-        CurrentConnection,
-        "
+    match when {
+        Duration::ZERO => sqlx::query_as!(
+            CurrentConnection,
+                "
 SELECT
     module_name,
     game_room,
     player_name
 FROM connections
 WHERE time = (SELECT MAX(time) FROM connections)
-        "
-    )
-    .fetch_all(ex)
-    .await
+ORDER BY module_name, game_room, player_name
+                "
+            )
+            .fetch_all(ex)
+            .await,
+
+        _ => sqlx::query_as!(
+            CurrentConnection,
+                "
+SELECT
+    module_name,
+    game_room,
+    player_name
+FROM connections
+WHERE unixepoch() * 1000 - time <= ? 
+ORDER BY module_name, game_room, player_name
+                ",
+                when.as_millis() as i64
+            )
+            .fetch_all(ex)
+            .await
+    }
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -254,11 +271,24 @@ impl IntoResponse for CurrentConnectionsError {
     }
 }
 
+#[derive(Deserialize)]
+struct CurrentConnectionsArgs {
+    when: Option<String>
+}
+
 async fn get_current_connections(
+    Query(query): Query<CurrentConnectionsArgs>,
     State(state): State<Arc<AppState>>
 ) -> Result<String, CurrentConnectionsError> {
 
-    let conns = get_connections_current(&state.db).await?;
+    let d = match query.when.as_deref() {
+        Some("day") => Duration::from_days(1),
+        Some("week") => Duration::from_days(7),
+        Some("month") => Duration::from_days(30),
+        _ => Duration::ZERO
+    };
+
+    let conns = get_connections_current(&state.db, d).await?;
 
     Ok(
         conns
@@ -282,7 +312,7 @@ struct GetMessagesArgs {
 #[derive(Debug, Deserialize)]
 struct Message {
     sender: String,
-    timestamp: i64,
+    time: i64,
     content: String
 }
 
@@ -293,13 +323,12 @@ async fn get_messages_for<'e, E>(
 where
     E: Executor<'e, Database = Sqlite>
 {
-//    unixepoch(time) * 1000 AS timestamp,
     sqlx::query_as!(
         Message, 
         "
 SELECT
     sender,
-    0 AS timestamp,
+    time,
     content
 FROM messages 
 WHERE module_name = ?
@@ -335,7 +364,7 @@ async fn get_messages(
             .map(|m| format!(
                 "SENDER={}&DATE={}&CONTENT={}",
                 m.sender,
-                m.timestamp,
+                m.time,
                 m.content
             ))
             .collect::<Vec<_>>()
@@ -515,8 +544,8 @@ INSERT INTO connections (
     module_name,
     player_name
 )
-VALUES (?, ?, ?, ?, datetime(?))
-ON CONFLICT(sha1) DO UPDATE SET time = datetime(?)
+VALUES (?, ?, ?, ?, ?)
+ON CONFLICT(sha1) DO UPDATE SET time = ?
         ",
         sha1,
         time,
@@ -597,104 +626,14 @@ async fn post_update_connections(
     Ok(())
 }
 
-#[derive(Debug, Clone, Copy)]
-enum When {
-    Current,
-    Day,
-    Week,
-    Month
-}
-
-#[derive(Template)]
-#[template(path = "status.html")]
-struct StatusTemplate(
-    When,
-    Result<Vec<CurrentConnection>, sqlx::Error>
-);
-
-struct HtmlTemplate<T>(T);
-
-impl<T: Template> IntoResponse for HtmlTemplate<T> {
-    fn into_response(self) -> Response {
-        match self.0.render() {
-            Ok(html) => Html(html).into_response(),
-            Err(err) => (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Failed to render template. Error: {}", err),
-            ).into_response(),
-        }
-    }
-}
-
-#[derive(Deserialize)]
-struct GetStatusArgs {
-    when: Option<String>
-}
-
-async fn get_connections_status<'e, E>(
-    ex: E,
-    when: Duration
-) -> Result<Vec<CurrentConnection>, sqlx::Error>
-where
-    E: Executor<'e, Database = Sqlite>
-{
-    match when {
-        Duration::ZERO => sqlx::query_as!(
-            CurrentConnection,
-                "
-SELECT
-    module_name,
-    game_room,
-    player_name
-FROM connections
-WHERE time = (SELECT MAX(time) FROM connections)
-ORDER BY module_name, game_room, player_name
-                "
-            )
-            .fetch_all(ex)
-            .await,
-
-        _ => sqlx::query_as!(
-            CurrentConnection,
-                "
-SELECT
-    module_name,
-    game_room,
-    player_name
-FROM connections
-WHERE julianday() - julianday(time) <= ? 
-ORDER BY module_name, game_room, player_name
-                ",
-                (when.as_secs() / 86400) as i64
-            )
-            .fetch_all(ex)
-            .await
-    }
-}
-
-async fn get_status(
-    Query(query): Query<GetStatusArgs>,
-    State(state): State<Arc<AppState>>,
-) -> HtmlTemplate<StatusTemplate>
-{
-    let (d, when) = match query.when.as_deref() {
-        Some("day") => (Duration::from_days(1), When::Day),
-        Some("week") => (Duration::from_days(7), When::Week),
-        Some("month") => (Duration::from_days(30), When::Month),
-        _ => (Duration::ZERO, When::Current)
-    };
-
-    let conns = get_connections_status(&state.db, d).await;
-
-    HtmlTemplate(StatusTemplate(when, conns))
-}
-
 fn routes(base_path: &str, log_headers: bool) -> Router<Arc<AppState>> {
     Router::new()
+/*
         .route(
             &format!("{base_path}/status.php"),
             get(get_status)
         )
+*/
         .route(
             &format!("{base_path}/util/getConnectionHistory.php"),
             get(get_connection_history)
@@ -758,7 +697,6 @@ async fn run() -> Result<(), StartupError> {
         .await?;
 
     let state = Arc::new(AppState {
-        base_path: config.base_path.clone(),
         game_server_ip: config.game_server_ip,
         motd_path: config.motd_path,
         db

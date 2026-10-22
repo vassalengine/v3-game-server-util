@@ -4,7 +4,6 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-askama = { version = "0.16", features = ["serde_json"] }
 axum = { version = "0.8", features = ["http1", "http2", "macros", "query", "tokio"] }
 chrono = "0.4"
 glc = { git = "https://github.com/vassalengine/game-library-common.git" }
