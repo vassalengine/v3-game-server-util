@@ -577,9 +577,8 @@ async fn post_update_connections(
     let mut status = None;
 
     while let Some(field) = form.next_field().await? {
-        match field.name() {
-            Some("STATUS") => status = Some(field.text().await?),
-            _ => {}
+        if let Some("STATUS") = field.name() {
+            status = Some(field.text().await?);
         }
     }
 
@@ -693,7 +692,7 @@ async fn run() -> Result<(), StartupError> {
 
     let db = SqlitePoolOptions::new()
         .max_connections(5)
-        .connect(&format!("sqlite://{}", &config.db_path))
+        .connect(&format!("sqlite://{}", config.db_path))
         .await?;
 
     let state = Arc::new(AppState {
