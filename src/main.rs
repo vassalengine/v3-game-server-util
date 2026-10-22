@@ -615,12 +615,6 @@ async fn post_update_connections(
 
 fn routes(base_path: &str, log_headers: bool) -> Router<Arc<AppState>> {
     Router::new()
-/*
-        .route(
-            &format!("{base_path}/status.php"),
-            get(get_status)
-        )
-*/
         .route(
             &format!("{base_path}/util/getConnectionHistory.php"),
             get(get_connection_history)
