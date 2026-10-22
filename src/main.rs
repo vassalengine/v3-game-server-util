@@ -611,31 +611,31 @@ async fn post_update_connections(
 fn routes(base_path: &str, log_headers: bool) -> Router<Arc<AppState>> {
     Router::new()
         .route(
-            &format!("{base_path}/util/getConnectionHistory"),
+            &format!("{base_path}/getConnectionHistory"),
             get(get_connection_history)
         )
         .route(
-            &format!("{base_path}/util/getCurrentConnections"),
+            &format!("{base_path}/getCurrentConnections"),
             get(get_current_connections)
         )
         .route(
-            &format!("{base_path}/util/getMessages"),
+            &format!("{base_path}/getMessages"),
             get(get_messages)
         )
         .route(
-            &format!("{base_path}/util/getMyAddress"),
+            &format!("{base_path}/getMyAddress"),
             get(get_my_address)
         )
         .route(
-            &format!("{base_path}/util/motd"),
+            &format!("{base_path}/motd"),
             get(get_motd)
         )
         .route(
-            &format!("{base_path}/util/postMessage"),
+            &format!("{base_path}/postMessage"),
             post(post_message)
         )
         .route(
-            &format!("{base_path}/util/updateConnections"),
+            &format!("{base_path}/updateConnections"),
             post(post_update_connections)
         )
         .layer(
