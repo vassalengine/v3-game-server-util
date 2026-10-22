@@ -33,5 +33,28 @@ jobs:
         run: |
           sqlx database setup
 
+      - name: Cache npm
+        uses: actions/cache@v6
+        id: cache-npm
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: ${{ runner.os }}-npm-
+
+      - name: Install JavaScript dependencies
+        run: |
+          cd app
+          npm install
+
+      - name: Build app
+        run: |
+          cd app
+          npm run build
+
+      - name: Test app
+        run: |
+          cd app
+          npm run test
+
       - name: Run tests
         run: cargo test
