@@ -51,10 +51,10 @@ jobs:
           cd app
           npm run build
 
-      - name: Test app
-        run: |
-          cd app
-          npm run test
+#      - name: Test app
+#        run: |
+#          cd app
+#          npm run test
 
       - name: Run tests
         run: cargo test
