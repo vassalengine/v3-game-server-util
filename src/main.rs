@@ -489,11 +489,6 @@ async fn post_message(
     Ok(())
 }
 
-async fn get_server_impl() -> &'static str {
-    // TODO: read these from config?
-    "type = node\nnodeHost = game.vassalengine.org\nnodePort = 5050"
-}
-
 #[derive(Debug, thiserror::Error)]
 pub enum UpdateConnectionsError {
     #[error("{0}")]
@@ -630,10 +625,6 @@ fn routes(base_path: &str, log_headers: bool) -> Router<Arc<AppState>> {
         .route(
             &format!("{base_path}/util/getMyAddress"),
             get(get_my_address)
-        )
-        .route(
-            &format!("{base_path}/util/getServerImpl.php"),
-            get(get_server_impl)
         )
         .route(
             &format!("{base_path}/util/motd"),
