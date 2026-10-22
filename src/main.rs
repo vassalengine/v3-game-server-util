@@ -616,19 +616,19 @@ async fn post_update_connections(
 fn routes(base_path: &str, log_headers: bool) -> Router<Arc<AppState>> {
     Router::new()
         .route(
-            &format!("{base_path}/util/getConnectionHistory.php"),
+            &format!("{base_path}/util/getConnectionHistory"),
             get(get_connection_history)
         )
         .route(
-            &format!("{base_path}/util/getCurrentConnections.php"),
+            &format!("{base_path}/util/getCurrentConnections"),
             get(get_current_connections)
         )
         .route(
-            &format!("{base_path}/util/getMessages.php"),
+            &format!("{base_path}/util/getMessages"),
             get(get_messages)
         )
         .route(
-            &format!("{base_path}/util/getMyAddress.php"),
+            &format!("{base_path}/util/getMyAddress"),
             get(get_my_address)
         )
         .route(
@@ -636,15 +636,15 @@ fn routes(base_path: &str, log_headers: bool) -> Router<Arc<AppState>> {
             get(get_server_impl)
         )
         .route(
-            &format!("{base_path}/util/motd.php"),
+            &format!("{base_path}/util/motd"),
             get(get_motd)
         )
         .route(
-            &format!("{base_path}/util/postMessage.php"),
+            &format!("{base_path}/util/postMessage"),
             post(post_message)
         )
         .route(
-            &format!("{base_path}/util/updateConnections.php"),
+            &format!("{base_path}/util/updateConnections"),
             post(post_update_connections)
         )
         .layer(
