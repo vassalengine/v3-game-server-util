@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS connections (
+  time INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
   sha1 BLOB PRIMARY KEY NOT NULL,
-  time TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   game_room TEXT NOT NULL,
   module_name TEXT NOT NULL,
   player_name TEXT NOT NULL
@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS messages (
   module_name TEXT NOT NULL,
   sender TEXT NOT NULL,
   content TEXT NOT NULL,
-  time TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  time INTEGER NOT NULL DEFAULT (unixepoch() * 1000)
 );
 
 CREATE INDEX idx_messages_time ON messages(time);
