@@ -28,7 +28,6 @@ use sqlx::{
     Executor, Pool,
     sqlite::{Sqlite, SqlitePoolOptions}
 };
-use sha1::{Digest, Sha1};
 use tower::ServiceBuilder;
 use tower_http::{
     compression::CompressionLayer,
@@ -529,7 +528,6 @@ async fn insert_connection<'e, E>(
     module_name: &str,
     game_room: &str,
     player_name: &str,
-    sha1: &[u8],
     time: i64
 ) -> Result<(), sqlx::Error>
 where
@@ -538,16 +536,14 @@ where
     sqlx::query!(
         "
 INSERT INTO connections (
-    sha1,
     time, 
     game_room,
     module_name,
     player_name
 )
-VALUES (?, ?, ?, ?, ?)
-ON CONFLICT(sha1) DO UPDATE SET time = ?
+VALUES (?, ?, ?, ?)
+ON CONFLICT DO UPDATE SET time = ?
         ",
-        sha1,
         time,
         game_room,
         module_name,
@@ -584,7 +580,6 @@ async fn post_update_connections(
 
     let status = status.ok_or(UpdateConnectionsError::MissingStatus)?;
 
-
     let now = Utc::now().timestamp_millis();
 
     for l in status.lines() {
@@ -606,18 +601,11 @@ async fn post_update_connections(
             return Err(UpdateConnectionsError::BadStatusLine);
         }
 
-        let hash_input = format!("{module_name}\0{game_room}\0{player_name}");
-        let mut sha1_hasher = Sha1::new();
-        sha1_hasher.update(hash_input.as_bytes());
-
-        let sha1 = sha1_hasher.finalize();
-
         insert_connection(
             &state.db,
             module_name,
             game_room,
             player_name,
-            &sha1,
             now
         ).await?;
     }

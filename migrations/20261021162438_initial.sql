@@ -1,9 +1,9 @@
 CREATE TABLE IF NOT EXISTS connections (
   time INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
-  sha1 BLOB PRIMARY KEY NOT NULL,
   game_room TEXT NOT NULL,
   module_name TEXT NOT NULL,
-  player_name TEXT NOT NULL
+  player_name TEXT NOT NULL,
+  UNIQUE(game_room, module_name, player_name)
 );
 
 CREATE INDEX idx_connections_time ON connections(time);
