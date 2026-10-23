@@ -1,12 +1,13 @@
 #![feature(duration_constructors)]
 
 use axum::{
-    Router,
+    Form, Router,
     body::Body,
     http::StatusCode,
     extract::{
-        ConnectInfo, Multipart, Query, Request, State,
-        multipart::MultipartError
+        ConnectInfo, FromRequest, Multipart, Query, Request, State,
+        multipart::MultipartError,
+        rejection::FormRejection
     },
     response::{IntoResponse, Response},
     routing::{get, post}
@@ -422,8 +423,8 @@ async fn post_message(
 pub enum UpdateConnectionsError {
     #[error("{0}")]
     SqlxError(#[from] sqlx::Error),
-    #[error("Missing STATUS")]
-    MissingStatus,
+    #[error("{0}")]
+    FormRejection(#[from] FormRejection),
     #[error("You are not our game server")]
     NotOurGameServer,
     #[error("Bad status line")]
@@ -477,14 +478,13 @@ ON CONFLICT DO UPDATE SET time = ?
 }
 
 #[derive(Deserialize)]
-struct UpdateConnectionArgs {
+struct UpdateConnectionsArgs {
     #[serde(rename(deserialize = "STATUS"))]
     status: String
 }
 
 #[axum::debug_handler]
 async fn post_update_connections(
-    Query(query): Query<UpdateConnectionArgs>,
     State(state): State<Arc<AppState>>,
     request: Request<Body>
 ) -> Result<(), UpdateConnectionsError>
@@ -495,9 +495,11 @@ async fn post_update_connections(
         return Err(UpdateConnectionsError::NotOurGameServer);
     }
 
+    let Form(form): Form<UpdateConnectionsArgs> = Form::from_request(request, &state).await?;
+
     let now = Utc::now().timestamp_millis();
 
-    for l in query.status.lines() {
+    for l in form.status.lines() {
         let mut s = l.split('\t');
 
         let Some(module_name) = s.next() else {
