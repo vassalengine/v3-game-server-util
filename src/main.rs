@@ -20,7 +20,6 @@ use std::{
     fs,
     io,
     net::{IpAddr, SocketAddr},
-    path::Path,
     sync::Arc,
     time::Duration
 };
@@ -39,7 +38,6 @@ use tracing::{error, info, Level};
 #[derive(Clone)]
 pub struct AppState {
     game_server_ip: String,
-    motd_path: String,
     db: Pool<Sqlite>
 }
 
@@ -50,7 +48,6 @@ pub struct Config {
     pub listen_port: u16,
     pub log_headers: bool,
     pub game_server_ip: String,
-    pub motd_path: String,
     pub db_path: String
 }
 
@@ -341,38 +338,6 @@ async fn get_my_address(request: Request<Body>) -> String {
     real_addr(&request)
 }
 
-#[derive(Deserialize)]
-struct GetMotdArgs {
-    module: Option<String>
-}
-
-#[derive(Debug, thiserror::Error)]
-pub enum GetMotdError {
-    #[error("{0}")]
-    IoError(#[from] std::io::Error)
-}
-
-impl IntoResponse for GetMotdError {
-    fn into_response(self) -> Response {
-        error!("{}", self);
-        (StatusCode::INTERNAL_SERVER_ERROR, self.to_string()).into_response()
-    }
-}
-
-async fn get_motd(
-    Query(query): Query<GetMotdArgs>,
-    State(state): State<Arc<AppState>>
-) -> Result<String, GetMotdError> {
-
-    let filename = match query.module.as_deref() {
-        Some("VASL") => "VASL",
-        _ => "VASSAL"
-    };
-
-    let path = Path::new(&state.motd_path).join(filename);
-    Ok(fs::read_to_string(path)?)
-}
-
 #[derive(Debug, thiserror::Error)]
 pub enum PostMessageError {
     #[error("{0}")]
@@ -593,10 +558,6 @@ fn routes(base_path: &str, log_headers: bool) -> Router<Arc<AppState>> {
             get(get_my_address)
         )
         .route(
-            &format!("{base_path}/motd"),
-            get(get_motd)
-        )
-        .route(
             &format!("{base_path}/postMessage"),
             post(post_message)
         )
@@ -636,7 +597,6 @@ async fn run() -> Result<(), StartupError> {
 
     let state = Arc::new(AppState {
         game_server_ip: config.game_server_ip,
-        motd_path: config.motd_path,
         db
     });
 

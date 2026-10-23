@@ -4,6 +4,5 @@ listen_port = 5000
 log_headers = false
 
 db_path = "util.db"
-motd_path = "motd_files"
 
 game_server_ip = "1.2.3.4"
