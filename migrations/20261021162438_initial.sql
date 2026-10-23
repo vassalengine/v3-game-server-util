@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS connections (
   UNIQUE(game_room, module_name, player_name)
 );
 
-CREATE INDEX idx_connections_time ON connections(time);
+CREATE INDEX IF NOT EXISTS idx_connections_time ON connections(time);
 
 CREATE TABLE IF NOT EXISTS messages (
   time INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
@@ -15,5 +15,5 @@ CREATE TABLE IF NOT EXISTS messages (
   content TEXT NOT NULL
 );
 
-CREATE INDEX idx_messages_time ON messages(time);
-CREATE INDEX idx_messages_module_name ON messages(module_name);
+CREATE INDEX IF NOT EXISTS idx_messages_time ON messages(time);
+CREATE INDEX IF NOT EXISTS idx_messages_module_name ON messages(module_name);
