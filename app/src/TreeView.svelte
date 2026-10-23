@@ -1,22 +1,19 @@
 <script module>
 	// retain module scoped expansion state for each tree node
-	const _expansionState = {
-		/* treeNodeId: expanded <boolean> */
-	}
+	const _expansionState = {}
 </script>
 
 <script>
   import TreeView from './TreeView.svelte';
 
-	let { 
+	let {
     tree,
-    startsExpanded = false
+    expandRecursively = false,
+    expanded = expandRecursively || _expansionState[tree.label] || false
   } = $props();
 
   const label = $derived(tree.label);
 	const children = $derived(tree.children);
-
-	let expanded = $state(startsExpanded || _expansionState[label] || false);
 
 	const toggleExpansion = () => {
 		expanded = _expansionState[label] = !expanded;
@@ -24,20 +21,23 @@
 
 	let arrowDown = $derived(expanded);
 
-/*
-  function expandChildren() {
-    for (const child of children) {
-      
-    }
+  export function expandAll() {
+		expanded = _expansionState[label] = true;
+    expandRecursively = true;
   }
-*/
+
+  export function collapseAll() {
+		expanded = _expansionState[label] = false;
+    expandRecursively = false;
+  }
+
 </script>
 
 <style>
 	ul {
 		margin: 0;
 		list-style: none;
-		padding-left: 1.5rem; 
+		padding-left: 1.5rem;
 		user-select: none;
 	}
 
@@ -71,7 +71,7 @@
 	  <button class:arrowDown onclick={toggleExpansion}>{label}</button>
 		{#if expanded}
 		  {#each children as child}
-			  <TreeView tree={child} />
+			  <TreeView tree={child} expandRecursively={expandRecursively} />
 			{/each}
 		{/if}
 	{:else}
