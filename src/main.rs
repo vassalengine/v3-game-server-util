@@ -5,8 +5,7 @@ use axum::{
     body::Body,
     http::StatusCode,
     extract::{
-        ConnectInfo, FromRequest, Multipart, Query, Request, State,
-        multipart::MultipartError,
+        ConnectInfo, FromRequest, Query, Request, State,
         rejection::FormRejection
     },
     response::{IntoResponse, Response},
@@ -340,27 +339,13 @@ async fn get_my_address(request: Request<Body>) -> String {
 #[derive(Debug, thiserror::Error)]
 pub enum PostMessageError {
     #[error("{0}")]
-    MultipartError(#[from] MultipartError),
-    #[error("{0}")]
-    SqlxError(#[from] sqlx::Error),
-    #[error("Missing sender")]
-    MissingSender,
-    #[error("Missing module")]
-    MissingModule,
-    #[error("Missing content")]
-    MissingContent,
-
+    SqlxError(#[from] sqlx::Error)
 }
 
 impl IntoResponse for PostMessageError {
     fn into_response(self) -> Response {
         error!("{}", self);
-        let status = match self {
-            Self::SqlxError(_) => StatusCode::INTERNAL_SERVER_ERROR,
-            _ => StatusCode::BAD_REQUEST
-        };
-
-        (status, self.to_string()).into_response()
+        (StatusCode::INTERNAL_SERVER_ERROR, self.to_string()).into_response()
     }
 }
 
@@ -392,29 +377,24 @@ VALUES (?, ?, ?)
     Ok(())
 }
 
+#[derive(Deserialize)]
+struct PostMessageArgs {
+    sender: String,
+    module: String,
+    content: String
+}
+
 async fn post_message(
     State(state): State<Arc<AppState>>,
-    mut form: Multipart
+    Form(form): Form<PostMessageArgs>
 ) -> Result<(), PostMessageError> {
 
-    let mut sender = None;
-    let mut module = None;
-    let mut content = None;
-
-    while let Some(field) = form.next_field().await? {
-        match field.name() {
-            Some("sender") => sender = Some(field.text().await?),
-            Some("module") => module = Some(field.text().await?),
-            Some("content") => content = Some(field.text().await?),
-            _ => {}
-        }
-    }
-
-    let sender = sender.ok_or(PostMessageError::MissingSender)?;
-    let module = module.ok_or(PostMessageError::MissingModule)?;
-    let content = content.ok_or(PostMessageError::MissingContent)?;
-
-    insert_message(&state.db, &module, &sender, &content).await?;
+    insert_message(
+        &state.db,
+        &form.module,
+        &form.sender,
+        &form.content
+    ).await?;
 
     Ok(())
 }
