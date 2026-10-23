@@ -5,10 +5,8 @@ use axum::{
     body::Body,
     http::StatusCode,
     extract::{
-        ConnectInfo, FromRequest, Multipart, Query, Request, State,
-        multipart::{
-            MultipartError, MultipartRejection
-        }
+        ConnectInfo, Multipart, Query, Request, State,
+        multipart::MultipartError
     },
     response::{IntoResponse, Response},
     routing::{get, post}
@@ -423,10 +421,6 @@ async fn post_message(
 #[derive(Debug, thiserror::Error)]
 pub enum UpdateConnectionsError {
     #[error("{0}")]
-    MultipartError(#[from] MultipartError),
-    #[error("{0}")]
-    MultipartRejection(#[from] MultipartRejection),
-    #[error("{0}")]
     SqlxError(#[from] sqlx::Error),
     #[error("Missing STATUS")]
     MissingStatus,
@@ -482,8 +476,15 @@ ON CONFLICT DO UPDATE SET time = ?
     Ok(())
 }
 
+#[derive(Deserialize)]
+struct UpdateConnectionArgs {
+    #[serde(rename(deserialize = "STATUS"))]
+    status: String
+}
+
 #[axum::debug_handler]
 async fn post_update_connections(
+    Query(query): Query<UpdateConnectionArgs>,
     State(state): State<Arc<AppState>>,
     request: Request<Body>
 ) -> Result<(), UpdateConnectionsError>
@@ -494,21 +495,9 @@ async fn post_update_connections(
         return Err(UpdateConnectionsError::NotOurGameServer);
     }
 
-    let mut form = Multipart::from_request(request, &state).await?;
-
-    let mut status = None;
-
-    while let Some(field) = form.next_field().await? {
-        if let Some("STATUS") = field.name() {
-            status = Some(field.text().await?);
-        }
-    }
-
-    let status = status.ok_or(UpdateConnectionsError::MissingStatus)?;
-
     let now = Utc::now().timestamp_millis();
 
-    for l in status.lines() {
+    for l in query.status.lines() {
         let mut s = l.split('\t');
 
         let Some(module_name) = s.next() else {
