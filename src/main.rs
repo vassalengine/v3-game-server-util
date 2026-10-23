@@ -149,8 +149,8 @@ async fn get_connection_history(
 
     let conns = get_connections(
         &state.db,
-        (query.start as i64) * 1000,
-        (query.end as i64) * 1000
+        query.start as i64,
+        query.end as i64
     ).await?;
 
     // FIXME: this doesn't properly escape tabs
