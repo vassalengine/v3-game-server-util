@@ -1,0 +1,41 @@
+mariadb-dump --skip-extended-insert --compact --all-databases --user vserver -p | gzip >db.sql.gz
+
+./mysql2sqlite db.sql | sqlite3 tmp.db 
+
+# fix times
+UPDATE messages SET time = unixepoch(time) * 1000;
+UPDATE connections SET time = unixepoch(time) * 1000;
+
+# drop sha1
+CREATE TABLE tmp (
+  time INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+  game_room TEXT NOT NULL,
+  module_name TEXT NOT NULL,
+  player_name TEXT NOT NULL,
+  UNIQUE(game_room, module_name, player_name)
+);
+
+INSERT INTO tmp SELECT time, game_room, module_name, player_name FROM connections;
+DROP TABLE connections;
+ALTER TABLE tmp RENAME TO connections;
+
+CREATE INDEX idx_connections_time ON connections(time);
+
+# make messages table create match what we expect
+CREATE TABLE tmp (
+  time INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
+  module_name TEXT NOT NULL,
+  sender TEXT NOT NULL,
+  content TEXT NOT NULL
+);
+
+INSERT INTO tmp SELECT time, module_name, sender, content FROM messages;
+DROP TABLE messages;
+ALTER TABLE tmp RENAME TO messages;
+
+CREATE INDEX idx_messages_time ON messages(time);
+CREATE INDEX idx_messages_module_name ON messages(module_name);
+
+# fix mojibake
+cp tmp.db util.db
+python3 fix_mojibake.py
