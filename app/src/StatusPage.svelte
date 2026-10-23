@@ -11,7 +11,6 @@
   const items = [
     {
       label: 'Current',
-      value: 1,
       component: StatusTree,
       props: {
         url: `${url}?when=current`
@@ -19,7 +18,6 @@
     },
     {
       label: 'Day',
-      value: 2,
       component: StatusTree,
       props: {
         url: `${url}?when=day`
@@ -27,7 +25,6 @@
     },
     {
       label: 'Week',
-      value: 3,
       component: StatusTree,
       props: {
         url: `${url}?when=week`
@@ -35,7 +32,6 @@
     },
     {
       label: 'Month',
-      value: 4,
       component: StatusTree,
       props: {
         url: `${url}?when=month`

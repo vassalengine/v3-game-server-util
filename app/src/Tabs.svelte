@@ -1,11 +1,11 @@
 <script>
   let {
     items = [],
-    activeTabValue = $bindable(1),
+    activeTabIndex = $bindable(1),
     toggleExpanded
   } = $props();
 
-  const handleClick = tabValue => () => (activeTabValue = tabValue);
+  const handleClick = tabIndex => () => (activeTabIndex = tabIndex);
 </script>
 
 <style>
@@ -63,9 +63,9 @@
 </style>
 
 <ul>
-{#each items as item}
-	<li class={activeTabValue === item.value ? 'active' : ''}>
-		<span onclick={handleClick(item.value)}>{item.label}</span>
+{#each items as item, i}
+	<li class={activeTabIndex === i ? 'active' : ''}>
+		<span onclick={handleClick(i)}>{item.label}</span>
 	</li>
 {/each}
   <li class="expander">
@@ -74,8 +74,8 @@
     </button>
   </li>
 </ul>
-{#each items as item}
-	{#if activeTabValue === item.value}
+{#each items as item, i}
+	{#if activeTabIndex === i}
 	<div class="box">
 		<item.component {...item.props} />
 	</div>
