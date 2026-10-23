@@ -79,8 +79,8 @@ fn real_addr(request: &Request) -> String {
 
 #[derive(Deserialize)]
 struct ConnectionHistoryArgs {
-    start: u32,
-    end: u32
+    start: i64,
+    end: i64
 }
 
 #[derive(Debug, Deserialize)]
