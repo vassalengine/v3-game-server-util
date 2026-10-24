@@ -1,7 +1,7 @@
 <script>
   let {
     items = [],
-    activeTabIndex = $bindable(1)
+    activeTabIndex = $bindable(0)
   } = $props();
 
   let activeTab = $state();
