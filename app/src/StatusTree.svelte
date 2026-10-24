@@ -1,13 +1,18 @@
 <script>
+  import { onMount } from 'svelte';
   import TreeView from './TreeView.svelte';
-  import { getConnections } from './load.js';
 
-  let { url } = $props();
+  let { getTree } = $props();
 
   let tree = $state({});
 
-  getConnections(url)
-    .then((root) => tree = root);
+  onMount(() => {
+    getTree()
+      .then((root) => {
+          root.expanded = true;
+          tree = root;
+      });
+  });
 
   export function expandAll() {
     setExpanded(tree, true);

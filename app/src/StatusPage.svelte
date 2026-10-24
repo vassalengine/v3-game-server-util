@@ -1,6 +1,7 @@
 <script>
   import StatusTree from './StatusTree.svelte';
   import Tabs from './Tabs.svelte';
+  import { getConnections } from './load.js';
 
 //  const url = 'http://localhost:8000/util/getCurrentConnections';
   const url = '/util/getCurrentConnections';
@@ -13,28 +14,28 @@
       label: 'Current',
       component: StatusTree,
       props: {
-        url: `${url}?when=current`
+        getTree: () => getConnections(`${url}?when=current`)
       }
     },
     {
       label: 'Day',
       component: StatusTree,
       props: {
-        url: `${url}?when=day`
+        getTree: () => getConnections(`${url}?when=day`)
       }
     },
     {
       label: 'Week',
       component: StatusTree,
       props: {
-        url: `${url}?when=week`
+        getTree: () => getConnections(`${url}?when=week`)
       }
     },
     {
       label: 'Month',
       component: StatusTree,
       props: {
-        url: `${url}?when=month`
+        getTree: () =>getConnections(`${url}?when=month`)
       }
     }
   ];
