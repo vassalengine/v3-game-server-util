@@ -9,15 +9,20 @@
   getConnections(url)
     .then((root) => tree = root);
 
-  let view;
-
   export function expandAll() {
-    view?.expandAll();
+    setExpanded(tree, true);
   }
 
   export function collapseAll() {
-    view?.collapseAll();
+    setExpanded(tree, false);
+  }
+
+  function setExpanded(node, expanded) {
+    node.expanded = expanded;
+    for (const child of node.children ?? []) {
+      setExpanded(child, expanded);
+    }
   }
 </script>
 
-<TreeView {tree} expanded=true bind:this={view} />
+<TreeView bind:tree={tree} />

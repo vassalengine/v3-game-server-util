@@ -1,36 +1,13 @@
-<script module>
-	// retain module scoped expansion state for each tree node
-	const _expansionState = {}
-</script>
-
 <script>
   import TreeView from './TreeView.svelte';
 
 	let {
-    tree,
-    expandRecursively = false,
-    expanded = expandRecursively || _expansionState[tree.label] || false
+    tree = $bindable()
   } = $props();
 
-  const label = $derived(tree.label);
-	const children = $derived(tree.children);
+	const toggleExpansion = () => { tree.expanded = !tree.expanded; }
 
-	const toggleExpansion = () => {
-		expanded = _expansionState[label] = !expanded;
-	}
-
-	let arrowDown = $derived(expanded);
-
-  export function expandAll() {
-		expanded = _expansionState[label] = true;
-    expandRecursively = true;
-  }
-
-  export function collapseAll() {
-		expanded = _expansionState[label] = false;
-    expandRecursively = false;
-  }
-
+	let arrowDown = $derived(tree.expanded);
 </script>
 
 <style>
@@ -68,17 +45,17 @@
 
 <ul>
   <li>
-  {#if children}
-	  <button class:arrowDown onclick={toggleExpansion}>{label}</button>
-		{#if expanded}
-		  {#each children as child}
-			  <TreeView tree={child} expandRecursively={expandRecursively} />
+  {#if tree.children}
+	  <button class:arrowDown onclick={toggleExpansion}>{tree.label}</button>
+		{#if tree.expanded}
+		  {#each tree.children as child, i (child.label)}
+			  <TreeView bind:tree={tree.children[i]} />
 			{/each}
 		{/if}
 	{:else}
     <span class="no-arrow">
       <svg class="svg-icon"><use xlink:href="#user"></use></svg>
-	    <span>{label}</span>
+	    <span>{tree.label}</span>
     </span>
   {/if}
   </li>

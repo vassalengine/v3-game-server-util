@@ -24,7 +24,8 @@ export async function getConnections(url) {
 
   // build the tree
   const root = {
-    children: []
+    children: [],
+    expanded: false
   };
 
   for (const [module_name, rooms] of Object.entries(tr)) {
@@ -39,7 +40,8 @@ export async function getConnections(url) {
 
       const room_tree = {
         label: `${room_name} (${players.length})`,
-        children: player_trees
+        children: player_trees,
+        expanded: false
       };
 
       room_trees.push(room_tree);
@@ -47,7 +49,8 @@ export async function getConnections(url) {
 
     const mod_tree = {
       label: `${module_name} (${room_trees.length})`,
-      children: room_trees
+      children: room_trees,
+      expanded: false
     };
 
     root.children.push(mod_tree);
