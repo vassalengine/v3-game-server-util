@@ -19,9 +19,7 @@
 
   function setExpanded(node, expanded) {
     node.expanded = expanded;
-    for (const child of node.children ?? []) {
-      setExpanded(child, expanded);
-    }
+    node.children?.forEach((child) => setExpanded(child, expanded));
   }
 </script>
 
