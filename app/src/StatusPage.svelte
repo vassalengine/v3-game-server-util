@@ -34,7 +34,7 @@
       label: 'Month',
       component: StatusTree,
       props: {
-        getTree: () =>getConnections(`${url}?when=month`)
+        getTree: () => getConnections(`${url}?when=month`)
       }
     }
   ];
