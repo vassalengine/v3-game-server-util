@@ -44,20 +44,21 @@
     margin-bottom: -1px;
   }
 
-  span {
+  li.tab > button {
     border: 1px solid transparent;
     border-top-left-radius: 0.25rem;
     border-top-right-radius: 0.25rem;
     display: block;
     padding: 0.5rem 1rem;
     cursor: pointer;
+    background: transparent;
   }
 
-  span:hover {
+  li.tab > button:hover {
     border-color: #e9ecef #e9ecef #dee2e6;
   }
 
-  li.active > span {
+  li.active > button {
     color: #495057;
     border-color: #dee2e6 #dee2e6 #fff;
   }
@@ -77,12 +78,12 @@
 
 <ul>
 {#each items as item, i}
-  <li class={activeTabIndex === i ? 'active' : ''}>
-    <span onclick={handleClick(i)}>{item.label}</span>
+  <li class="tab {activeTabIndex === i ? 'active' : ''}">
+    <button title={item.label} onclick={handleClick(i)}>{item.label}</button>
   </li>
 {/each}
   <li class="expander">
-    <button onclick={toggleExpansion}>
+    <button title={toExpand ? "Expand all" : "Collapse all"} onclick={toggleExpansion}>
       <svg class="svg-icon"><use xlink:href={toExpand ? '#square-plus' : '#square-minus'}></use></svg>
     </button>
   </li>
