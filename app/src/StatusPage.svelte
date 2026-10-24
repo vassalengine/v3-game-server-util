@@ -3,7 +3,6 @@
   import Tabs from './Tabs.svelte';
   import { getConnections } from './load.js';
 
-//  const url = 'http://localhost:8000/util/getCurrentConnections';
   const url = '/util/getCurrentConnections';
 
   const params = new URLSearchParams(window.location.search);
