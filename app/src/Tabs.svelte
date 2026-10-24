@@ -23,13 +23,13 @@
 </script>
 
 <style>
-	.box {
-		margin-bottom: 10px;
-		padding: 40px;
-		border: 1px solid #dee2e6;
+  .box {
+    margin-bottom: 10px;
+    padding: 40px;
+    border: 1px solid #dee2e6;
     border-radius: 0 0 .5rem .5rem;
     border-top: 0;
-	}
+  }
 
   ul {
     display: flex;
@@ -40,9 +40,9 @@
     border-bottom: 1px solid #dee2e6;
   }
 
-	li {
-		margin-bottom: -1px;
-	}
+  li {
+    margin-bottom: -1px;
+  }
 
   span {
     border: 1px solid transparent;
@@ -78,9 +78,9 @@
 
 <ul>
 {#each items as item, i}
-	<li class={activeTabIndex === i ? 'active' : ''}>
-		<span onclick={handleClick(i)}>{item.label}</span>
-	</li>
+  <li class={activeTabIndex === i ? 'active' : ''}>
+    <span onclick={handleClick(i)}>{item.label}</span>
+  </li>
 {/each}
   <li class="expander">
     <button onclick={toggleExpansion}>
@@ -89,9 +89,9 @@
   </li>
 </ul>
 {#each items as item, i}
-	{#if activeTabIndex === i}
-	<div class="box">
-		<item.component {...item.props} bind:this={tabs[i]} />
-	</div>
-	{/if}
+  {#if activeTabIndex === i}
+  <div class="box">
+    <item.component {...item.props} bind:this={tabs[i]} />
+  </div>
+  {/if}
 {/each}

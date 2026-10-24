@@ -48,6 +48,7 @@
   button {
     border: none;
     background: transparent;
+    text-align: start;
   }
 
   button::before {
