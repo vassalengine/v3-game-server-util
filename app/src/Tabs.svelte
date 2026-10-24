@@ -59,7 +59,6 @@
 
   li.active > span {
     color: #495057;
-    background-color: #fff;
     border-color: #dee2e6 #dee2e6 #fff;
   }
 
