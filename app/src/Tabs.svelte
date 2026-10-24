@@ -4,19 +4,18 @@
     activeTabIndex = $bindable(1)
   } = $props();
 
-  let tabs = $state([]);
+  let activeTab = $state();
 
   const handleClick = tabIndex => () => (activeTabIndex = tabIndex);
 
   let toExpand = $state(true);
 
   function toggleExpansion() {
-    const tab = tabs[activeTabIndex];
     if (toExpand) {
-      tab.expandAll();
+      activeTab.expandAll();
     }
     else {
-      tab.collapseAll();
+      activeTab.collapseAll();
     }
     toExpand = !toExpand;
   }
@@ -91,7 +90,7 @@
 {#each items as item, i}
   {#if activeTabIndex === i}
   <div class="box">
-    <item.component {...item.props} bind:this={tabs[i]} />
+    <item.component {...item.props} bind:this={activeTab} />
   </div>
   {/if}
 {/each}
