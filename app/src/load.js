@@ -26,7 +26,7 @@ export async function getConnections(url, expanded) {
 
   // build the tree
   const root = {
-    id: next_id,
+    id: next_id++,
     children: [],
   };
 
@@ -41,7 +41,7 @@ export async function getConnections(url, expanded) {
       }
 
       const room_tree = {
-        id: ++next_id,
+        id: next_id++,
         label: `${room_name} (${players.length})`,
         children: player_trees,
       };
@@ -50,7 +50,7 @@ export async function getConnections(url, expanded) {
     }
 
     const mod_tree = {
-      id: ++next_id,
+      id: next_id++,
       label: `${module_name} (${room_trees.length})`,
       children: room_trees,
     };
