@@ -6,7 +6,6 @@
 
   let expanded = $state([]);
   let activeTab = $state();
-
   let activeItem = $derived(items[activeTabIndex]);
 
   const handleClick = tabIndex => () => (activeTabIndex = tabIndex);
@@ -93,5 +92,5 @@
   </li>
 </ul>
 <div class="box">
-  <activeItem.component bind:items={items} idx={activeTabIndex} bind:expanded bind:this={activeTab} />
+  <activeItem.component bind:item={activeItem} bind:expanded bind:this={activeTab} />
 </div>

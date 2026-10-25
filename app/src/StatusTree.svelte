@@ -3,17 +3,16 @@
   import { getConnections } from './load.js';
 
   let {
-    idx,
-    items = $bindable(),
+    item = $bindable(),
     expanded = $bindable()
   } = $props();
 
   export function expandAll() {
-    setExpanded(items[idx].root, true);
+    setExpanded(item.root, true);
   }
 
   export function collapseAll() {
-    setExpanded(items[idx].root, false);
+    setExpanded(item.root, false);
   }
 
   function setExpanded(node, exp) {
@@ -22,8 +21,8 @@
   }
 
   async function loadTree() {
-    if (!items[idx].root) {
-      items[idx].root = await getConnections(items[idx].url, expanded);
+    if (!item.root) {
+      item.root = await getConnections(item.url, expanded);
     }
   }
 </script>
@@ -31,5 +30,5 @@
 {#await loadTree()}
 <div>Loading...</div>
 {:then}
-<TreeView bind:expanded node={items[idx].root} />
+<TreeView bind:expanded node={item.root} />
 {/await}
