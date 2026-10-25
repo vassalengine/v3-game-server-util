@@ -7,7 +7,14 @@ export async function getConnections(url, expanded) {
   const tr = {};
 
   for (const line of payload.split('\n')) {
-    const [module_name, game_room, player_name] = line.split('\t', 3);
+    const cols = line.split('\t', 3);
+
+    if (cols.length != 3) {
+      // this line is corrupt or empty
+      continue;
+    }
+
+    const [module_name, game_room, player_name] = cols;
 
     let mod = tr[module_name];
     if (mod === undefined) {
