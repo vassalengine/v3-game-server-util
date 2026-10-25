@@ -30,5 +30,9 @@
 {#await loadTree()}
 <div>Loading...</div>
 {:then}
+  {#if item.root}
 <TreeView bind:expanded node={item.root} />
+  {/if}
+{:catch error}
+<div>Failed to load server status: {error.message}</div>
 {/await}
