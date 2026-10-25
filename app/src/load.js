@@ -26,7 +26,7 @@ export async function getConnections(url, expanded) {
 
   // build the tree
   const root = {
-    id: next_id, 
+    id: next_id,
     children: [],
   };
 
