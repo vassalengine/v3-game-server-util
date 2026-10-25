@@ -5,23 +5,19 @@
   } = $props();
 
   let expanded = $state([]);
-
   let activeTab = $state();
+
+  let activeItem = $derived(items[activeTabIndex]);
 
   const handleClick = tabIndex => () => (activeTabIndex = tabIndex);
 
-  let toExpand = $state(true);
-
-  function toggleExpansion() {
-    if (toExpand) {
-      activeTab.expandAll();
-    }
-    else {
-      activeTab.collapseAll();
-    }
-    toExpand = !toExpand;
+  function expandAll() {
+    activeTab.expandAll();
   }
 
+  function collapseAll() {
+    activeTab.collapseAll();
+  }
 </script>
 
 <style>
@@ -85,16 +81,14 @@
   </li>
 {/each}
   <li class="expander">
-    <button title={toExpand ? "Expand all" : "Collapse all"} onclick={toggleExpansion}>
-      <svg class="svg-icon"><use xlink:href={toExpand ? '#square-plus' : '#square-minus'}></use></svg>
+    <button title="Collapse all" onclick={collapseAll}>
+      <svg class="svg-icon"><use xlink:href="#square-minus"></use></svg>
+    </button>
+    <button title="Expand all" onclick={expandAll}>
+      <svg class="svg-icon"><use xlink:href="#square-plus"></use></svg>
     </button>
   </li>
 </ul>
-{#each items as item, i}
-  {#if activeTabIndex === i}
-  <div class="box">
-    <item.component bind:items={items} idx={i} bind:expanded bind:this={activeTab} />
-
-  </div>
-  {/if}
-{/each}
+<div class="box">
+  <activeItem.component bind:items={items} idx={activeTabIndex} bind:expanded bind:this={activeTab} />
+</div>
