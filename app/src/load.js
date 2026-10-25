@@ -1,4 +1,4 @@
-export async function getConnections(url) {
+export async function getConnections(url, expanded) {
   // get the data
   const result = await fetch(url);
   let payload = await result.text();
@@ -22,10 +22,12 @@ export async function getConnections(url) {
     room.push(player_name);
   }
 
+  let next_id = expanded.length;
+
   // build the tree
   const root = {
+    id: next_id, 
     children: [],
-    expanded: false
   };
 
   for (const [module_name, rooms] of Object.entries(tr)) {
@@ -39,24 +41,27 @@ export async function getConnections(url) {
       }
 
       const room_tree = {
+        id: ++next_id,
         label: `${room_name} (${players.length})`,
         children: player_trees,
-        expanded: false
       };
 
       room_trees.push(room_tree);
     }
 
     const mod_tree = {
+      id: ++next_id,
       label: `${module_name} (${room_trees.length})`,
       children: room_trees,
-      expanded: false
     };
 
     root.children.push(mod_tree);
   }
 
   root.label = `Vassal (${root.children.length})`;
+
+  expanded.push(...Array(next_id - expanded.length).fill(false));
+  expanded[root.id] = true;
 
   return root;
 }

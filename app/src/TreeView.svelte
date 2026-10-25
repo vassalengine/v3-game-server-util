@@ -2,12 +2,13 @@
   import TreeView from './TreeView.svelte';
 
 	let {
-    tree = $bindable()
+    node,
+    expanded = $bindable()
   } = $props();
 
-	const toggleExpansion = () => { tree.expanded = !tree.expanded; }
+	const toggleExpansion = () => { expanded[node.id] = !expanded[node.id]; }
 
-	let arrowDown = $derived(tree.expanded);
+	let arrowDown = $derived(expanded[node.id]);
 </script>
 
 <style>
@@ -45,17 +46,17 @@
 
 <ul>
   <li>
-  {#if tree.children}
-	  <button class:arrowDown onclick={toggleExpansion}>{tree.label}</button>
-		{#if tree.expanded}
-		  {#each tree.children as child, i (child.label)}
-			  <TreeView bind:tree={tree.children[i]} />
+  {#if node.children}
+	  <button class:arrowDown onclick={toggleExpansion}>{node.label}</button>
+		{#if expanded[node.id]}
+		  {#each node.children as child, i (child.label)}
+			  <TreeView bind:expanded node={child} />
 			{/each}
 		{/if}
 	{:else}
     <span class="no-arrow">
       <svg class="svg-icon"><use xlink:href="#user"></use></svg>
-	    <span>{tree.label}</span>
+	    <span>{node.label}</span>
     </span>
   {/if}
   </li>

@@ -1,41 +1,36 @@
 <script>
   import StatusTree from './StatusTree.svelte';
   import Tabs from './Tabs.svelte';
-  import { getConnections } from './load.js';
 
   const url = '/util/getCurrentConnections';
 
   const params = new URLSearchParams(window.location.search);
   let when = $state(params.get('when'));
 
-  const items = [
+  let items = [
     {
       label: 'Current',
       component: StatusTree,
-      props: {
-        getTree: () => getConnections(`${url}?when=current`)
-      }
+      root: null,
+      url: `${url}?when=current`
     },
     {
       label: 'Day',
       component: StatusTree,
-      props: {
-        getTree: () => getConnections(`${url}?when=day`)
-      }
+      root: null,
+      url: `${url}?when=day`
     },
     {
       label: 'Week',
       component: StatusTree,
-      props: {
-        getTree: () => getConnections(`${url}?when=week`)
-      }
+      root: null,
+      url: `${url}?when=week`
     },
     {
       label: 'Month',
       component: StatusTree,
-      props: {
-        getTree: () => getConnections(`${url}?when=month`)
-      }
+      root: null,
+      url: `${url}?when=month`
     }
   ];
 
@@ -51,7 +46,7 @@
 <div class="container mb-5">
   <div class="row justify-content-center">
     <div class="col-md-8">
-      <Tabs {items} />
+      <Tabs bind:items />
     </div>
   </div>
 </div>

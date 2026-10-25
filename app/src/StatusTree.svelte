@@ -1,31 +1,34 @@
 <script>
-  import { onMount } from 'svelte';
   import TreeView from './TreeView.svelte';
+  import { getConnections } from './load.js';
 
-  let { getTree } = $props();
-
-  let tree = $state({});
-
-  onMount(() => {
-    getTree()
-      .then((root) => {
-          root.expanded = true;
-          tree = root;
-      });
-  });
+  let {
+    idx,
+    items = $bindable(),
+    expanded = $bindable()
+  } = $props();
 
   export function expandAll() {
-    setExpanded(tree, true);
+    setExpanded(items[idx].root, true);
   }
 
   export function collapseAll() {
-    setExpanded(tree, false);
+    setExpanded(items[idx].root, false);
   }
 
-  function setExpanded(node, expanded) {
-    node.expanded = expanded;
-    node.children?.forEach((child) => setExpanded(child, expanded));
+  function setExpanded(node, exp) {
+    expanded[node.id] = exp;
+    node.children?.forEach((child) => setExpanded(child, exp));
+  }
+
+  async function loadTree() {
+    if (!items[idx].root) {
+      items[idx].root = await getConnections(items[idx].url, expanded);
+    }
   }
 </script>
 
-<TreeView bind:tree={tree} />
+{#await loadTree()}
+{:then}
+<TreeView bind:expanded node={items[idx].root} />
+{/await}

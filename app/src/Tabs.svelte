@@ -1,8 +1,10 @@
 <script>
   let {
-    items = [],
+    items = $bindable(),
     activeTabIndex = $bindable(0)
   } = $props();
+
+  let expanded = $state([]);
 
   let activeTab = $state();
 
@@ -19,6 +21,7 @@
     }
     toExpand = !toExpand;
   }
+
 </script>
 
 <style>
@@ -90,7 +93,8 @@
 {#each items as item, i}
   {#if activeTabIndex === i}
   <div class="box">
-    <item.component {...item.props} bind:this={activeTab} />
+    <item.component bind:items={items} idx={i} bind:expanded bind:this={activeTab} />
+
   </div>
   {/if}
 {/each}
