@@ -62,6 +62,7 @@
   }
 
   li.expander {
+    display: flex;
     margin-left: auto;
     align-self: center;
     margin-right: 0.5em;
@@ -69,8 +70,10 @@
   }
 
   li.expander > button {
+    display: block;
     background: transparent;
     border: none;
+    padding: 0;
   }
 </style>
 
