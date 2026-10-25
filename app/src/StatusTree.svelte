@@ -29,6 +29,7 @@
 </script>
 
 {#await loadTree()}
+<div>Loading...</div>
 {:then}
 <TreeView bind:expanded node={items[idx].root} />
 {/await}

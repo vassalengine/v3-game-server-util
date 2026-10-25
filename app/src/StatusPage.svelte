@@ -7,7 +7,7 @@
   const params = new URLSearchParams(window.location.search);
   let when = $state(params.get('when'));
 
-  let items = [
+  let items = $state([
     {
       label: 'Current',
       component: StatusTree,
@@ -32,7 +32,7 @@
       root: null,
       url: `${url}?when=month`
     }
-  ];
+  ]);
 
 </script>
 
