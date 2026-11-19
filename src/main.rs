@@ -463,7 +463,6 @@ struct UpdateConnectionsArgs {
     status: String
 }
 
-#[axum::debug_handler]
 async fn post_update_connections(
     State(state): State<Arc<AppState>>,
     request: Request<Body>
