@@ -11,7 +11,7 @@ use axum::{
     response::{IntoResponse, Response},
     routing::{get, post}
 };
-use chrono::Utc;
+use chrono::{Days, Utc};
 use glc::server::{setup_logging, serve, SpanMaker};
 use serde::Deserialize;
 use std::{
@@ -261,6 +261,33 @@ async fn get_current_connections(
             ))
             .collect::<Vec<_>>()
             .join("\n")
+    )
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum CleanupConnectionsError {
+    #[error("{0}")]
+    SqlxError(#[from] sqlx::Error),
+}
+
+async fn cleanup_connections<'e, E>(
+    ex: E,
+    before: i64
+) -> Result<u64, CleanupConnectionsError>
+where
+    E: Executor<'e, Database = Sqlite>
+{
+    Ok(
+        sqlx::query!(
+            "
+DELETE FROM connections
+WHERE time < ?
+            ",
+            before,
+        )
+        .execute(ex)
+        .await?
+        .rows_affected()
     )
 }
 
@@ -570,6 +597,25 @@ async fn run() -> Result<(), StartupError> {
         db
     });
 
+    // start connections cleanup task
+    let mut interval = tokio::time::interval(Duration::from_hours(24));
+    let cleanup_state = state.clone();
+
+    tokio::spawn(async move {
+        loop {
+            interval.tick().await;
+            if let Some(before) = Utc::now()
+                .checked_sub_days(Days::new(30))
+                .map(|dt| dt.timestamp_millis())
+            {
+                match cleanup_connections(&cleanup_state.db, before).await {
+                    Ok(n) => info!("cleaned up {n} stale connections"),
+                    Err(e) => error!("{e}")
+                }
+            }
+        }
+    });
+
     // set up router
     let app = routes(
         &config.base_path,
@@ -592,7 +638,7 @@ async fn main() {
     info!("Starting");
 
     if let Err(e) = run().await {
-        error!("{}", e);
+        error!("{e}");
     }
 
     info!("Exiting");
