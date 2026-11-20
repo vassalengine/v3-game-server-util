@@ -609,7 +609,7 @@ async fn run() -> Result<(), StartupError> {
                 .map(|dt| dt.timestamp_millis())
             {
                 match cleanup_connections(&cleanup_state.db, before).await {
-                    Ok(n) => info!("cleaned up {n} stale connections"),
+                    Ok(n) => info!("Cleaned up {n} stale connections"),
                     Err(e) => error!("{e}")
                 }
             }
